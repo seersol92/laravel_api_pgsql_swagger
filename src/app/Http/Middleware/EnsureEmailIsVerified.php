@@ -15,10 +15,9 @@ class EnsureEmailIsVerified
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+        /*if ($request->user() && !$request->user()->hasVerifiedEmail()) {
             return response()->json(['error' => 'Email not verified.'], 403);
-        }
-
+        }*/
         return $next($request);
     }
 }

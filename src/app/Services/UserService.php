@@ -1,10 +1,9 @@
 <?php
 namespace App\Services;
 
-use App\Repositories\UserRepository;
+use App\Repositories\Repository\UserRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class UserService
 {
@@ -17,34 +16,26 @@ class UserService
 
     public function register(array $data)
     {
-        $user = $this->userRepository->create([
+        $user = $this->userRepository->add([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'email_verified_at' => null, // Assuming email verification is required
         ]);
-
         // Send verification email
-        $user->sendEmailVerificationNotification();
-
+        #$user->sendEmailVerificationNotification();
         return $user;
     }
 
-    public function login(array $credentials)
+    public function login(array $loginUserData)
     {
-        if (!Auth::attempt($credentials)) {
-            return false;
-        }
-
-        $user = Auth::user();
-
-        // Check if email is verified
-        if (!$user->hasVerifiedEmail()) {
-            return 'Email not verified.';
-        }
-
-        // Generate token
-        return $user->createToken('authToken')->plainTextToken;
+        $user = $this->userRepository->findByAttributes(['email' => $loginUserData['email']]);
+        if(!$user || !Hash::check($loginUserData['password'], $user->password)) return false;
+        $token = $user->createToken($user->name.'-AuthToken')->plainTextToken;
+        return [
+            'user' => $user->only('id', 'name', 'email'),
+            'token' => $token
+        ];
     }
 
     public function logout()
